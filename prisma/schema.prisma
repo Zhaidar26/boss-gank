@@ -1,0 +1,33 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── 1. TABEL UNTUK MENAMPUNG PRODUK PIZZA & DESSERT ───
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String
+  price         Int
+  image         String
+  description   String
+  category      String[] // Menyimpan multi-kategori (contoh: ["pizza", "recommended"])
+  isRecommended Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+// ─── 2. TABEL UNTUK MENAMPUNG DATA TRANSAKSI / ORDER ───
+model Order {
+  id            String   @id // Menggunakan string untuk format custom (contoh: BOSS-171751)
+  customerName  String
+  customerPhone String
+  customerAddr  String
+  customerNotes String?
+  total         Int
+  paymentMethod String   // "midtrans" atau "whatsapp"
+  status        String   // "pending", "processing", "success", "failed"
+  items         Json     // Menyimpan detail daftar belanja produk dalam bentuk JSON biner
+  createdAt     DateTime @default(now())
+}
