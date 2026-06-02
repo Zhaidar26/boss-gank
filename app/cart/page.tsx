@@ -78,7 +78,12 @@ export default function CartPage() {
 
         const newOrderData: Order = {
             id: randomOrderId,
-            customer: shippingData,
+            customer: {
+                name: shippingData.name,
+                address: shippingData.address,
+                notes: shippingData.notes,
+                phone: Number(shippingData.phone) || 0,
+            },
             items: cart.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
             total: totalPrice,
             paymentMethod: paymentMethod as "midtrans" | "whatsapp",

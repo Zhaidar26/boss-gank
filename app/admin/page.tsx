@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useProductStore } from "@/store/useProductStore";
+import { useProductStore, Product } from "@/store/useProductStore";
 import Link from "next/link";
 import Image from "next/image";
 

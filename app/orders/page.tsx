@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function OrderPage() {
-    const { orders } = useOrderStore;
+    const { orders } = useOrderStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {

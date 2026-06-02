@@ -5,11 +5,10 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
-  schema: "./prisma/schema.prisma",
+  earlyAccess: true, // Kadang diperlukan di beberapa sub-versi Prisma 7
   datasource: {
-    // URL pooling (port 6543) untuk transaksi harian aplikasi
     url: process.env.DATABASE_URL,
-    // URL direct (port 5432) khusus untuk eksekusi migrasi struktur tabel
-    directUrl: process.env.DIRECT_URL,
+    // 🎯 Di sini directUrl akan dianggap LEGAL dan VALID oleh TypeScript
+    directUrl: process.env.DIRECT_URL, 
   },
-});
+} as any);

@@ -16,7 +16,7 @@ interface ProductStoreState {
   fetchProducts: () => Promise<void>;
   addProduct: (product: Omit<Product, "id">) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
-  updateProduct: (id: number, updateData: Omit<Product, "id">) => Primise<void>;
+  updateProduct: (id: number, updateData: Omit<Product, "id">) => Promise<void>;
 }
 
 export const useProductStore = create<ProductStoreState>((set, get) => ({
