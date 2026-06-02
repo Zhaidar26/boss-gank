@@ -7,6 +7,8 @@ import Link from "next/link";
 import { div } from "framer-motion/client";
 import { useEffect, useState } from "react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default function Home() {
   const { products, isLoading, fetchProducts } = useProductStore();
