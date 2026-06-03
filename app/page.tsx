@@ -11,7 +11,7 @@ const ProductGrid = ({ items }: { items: Product[] }) => (
     {items.map((product) => (
       // 🚀 PERBAIKAN: Alamat URL diubah dari /product/ menjadi /products/ agar sinkron dengan database
       <Link
-        href={`/products/${product.id}`}
+        href={`/product/${product.id}`}
         key={product.id}
         className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300"
       >
