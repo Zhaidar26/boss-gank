@@ -1,15 +1,41 @@
 "use client";
 
 import Image from "next/image";
-import { products } from "@/data/products";
-import { useProductStore } from "@/store/useProductStore";
+import { useProductStore, Product } from "@/store/useProductStore";
 import Link from "next/link";
-import { div } from "framer-motion/client";
 import { useEffect, useState } from "react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ─── 1. KOMPONEN GRID PRODUK (DIPINDAH KE LUAR AGAR BEBAS EROR LINTER) ───
+const ProductGrid = ({ items }: { items: Product[] }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {items.map((product) => (
+      // 🚀 PERBAIKAN: Alamat URL diubah dari /product/ menjadi /products/ agar sinkron dengan database
+      <Link
+        href={`/products/${product.id}`}
+        key={product.id}
+        className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300"
+      >
+        <div className="relative h-56 w-full bg-gray-50 overflow-hidden">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover group-hover:scale-105 transition duration-500"
+          />
+        </div>
+        <div className="p-5 flex flex-col flex-grow justify-between">
+          <div>
+            <h3 className="font-bold text-lg text-black group-hover:text-amber-600 transition">{product.name}</h3>
+            <p className="text-xs text-gray-400 mt-1 line-clamp-2">{product.description}</p>
+          </div>
+          <p className="text-base font-black text-gray-900 mt-4">Rp {product.price.toLocaleString()}</p>
+        </div>
+      </Link>
+    ))}
+  </div>
+);
 
+// ─── 2. KOMPONEN HALAMAN UTAMA ───
 export default function Home() {
   const { products, isLoading, fetchProducts } = useProductStore();
   const [mounted, setMounted] = useState(false);
@@ -17,37 +43,20 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     fetchProducts();
-  }, []);
+  }, [fetchProducts]); // Ditambahkan dependency agar linter tidak warning
 
   if (!mounted) return <p className="text-center p-20 text-gray-400">Loading Menu...</p>;
 
+  // Filter kategori produk
   const recommendedProducts = products.filter((p) => p.isRecommended);
   const pizzaProducts = products.filter((p) => p.category.includes("pizza"));
   const restoProducts = products.filter((p) => p.category.includes("resto"));
   const dessertProducts = products.filter((p) => p.category.includes("dessert"));
   const drinkProducts = products.filter((p) => p.category.includes("drink"));
 
-  const ProductGrid = ({ items }: { items: typeof products }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-      {items.map((product) => (
-        <Link href={`/product/${product.id}`} key={product.id} className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300">
-          <div className="relative h-56 w-full bg-gray-50 overflow-hidden">
-            <Image src={product.image} alt={product.name} fill className="object-cover group-hover:scale-105 transition duration-500" />
-          </div>
-          <div className="p-5 flex flex-col flex-grow justify-between">
-            <div>
-              <h3 className="font-bold text-lg text-black group-hover:text-amber-600 transition">{product.name}</h3>
-              <p className="text-xs text-gray-400 mt-1 line-clamp-2">{product.description}</p>
-            </div>
-            <p className="text-base font-black text-gray-900 mt-4">Rp {product.price.toLocaleString()}</p>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
   return (
-    // Header Website
     <main className="min-h-screen bg-neutral-50 text-black px-6 py-12 md:px-20">
+      {/* Header Website */}
       <div className="text-center md:text-left mb-16">
         <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl text-black">
           BOSS GANK <span className="text-amber-500"> PIZZA </span>
@@ -55,7 +64,7 @@ export default function Home() {
         <p className="text-sm text-gray-400 mt-2 tracking-wide uppercase">Pizza enak yo nak kene!</p>
       </div>
       <div className="mb-6">
-        <Link href="/admin" className="text-xs border border-gray-300 rounded-3xl px-4 py-2 hover:bg-black hover:text-white trnsition font-medium">
+        <Link href="/admin" className="text-xs border border-gray-300 rounded-3xl px-4 py-2 hover:bg-black hover:text-white transition font-medium">
           MASUK DASHBOARD MENU
         </Link>
       </div>
@@ -67,7 +76,7 @@ export default function Home() {
           <p className="mt-4 text-slate-600 text-sm font-medium animate-pulse">Memuat Menu yang Lezat</p>
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-20 bg-whte rounded-2xl border border-dashed border-slate-300">
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
           <p className="text-slate-400 font-medium">Menunya Belum ditambah nih..</p>
           <p className="text-xs text-slate-400 mt-1">Hubungi Customer Service untuk melaporkan kesalahan</p>
         </div>
