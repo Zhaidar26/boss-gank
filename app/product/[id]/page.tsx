@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-// 🚀 1. Hapus import data dummy, ganti dengan import prisma client
-import { prisma } from "../../lib/prisma"; // Sesuaikan jika letak file prismamu berbeda (misal @/prisma atau @/lib/prisma)
+import { prisma } from "../../lib/prisma";
 import AddToCartButton from "@/components/AddToCartButton";
 import { notFound } from "next/navigation";
 
