@@ -32,7 +32,6 @@ export default function LoginPage() {
                 throw new Error("Email atau password salah!");
             }
 
-            alert("Selamat datang kembali!");
             router.push("/"); // Redirect ke home/toko utama
             router.refresh();
         } catch (err: any) {
