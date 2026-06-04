@@ -8,8 +8,7 @@ import { useEffect, useState } from "react";
 // ─── 1. KOMPONEN GRID PRODUK (DIPINDAH KE LUAR AGAR BEBAS EROR LINTER) ───
 const ProductGrid = ({ items }: { items: Product[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-    {items.map((product) => (
-      // 🚀 PERBAIKAN: Alamat URL diubah dari /product/ menjadi /products/ agar sinkron dengan database
+    {items.map((product) => ( 
       <Link
         href={`/product/${product.id}`}
         key={product.id}
@@ -64,9 +63,6 @@ export default function Home() {
         <p className="text-sm text-gray-400 mt-2 tracking-wide uppercase">Pizza enak yo nak kene!</p>
       </div>
       <div className="mb-6">
-        <Link href="/admin" className="text-xs border border-gray-300 rounded-3xl px-4 py-2 hover:bg-black hover:text-white transition font-medium">
-          MASUK DASHBOARD MENU
-        </Link>
       </div>
 
       {/* Body Website */}

@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic"; // 🚀 1. Import modul dynamic bawaan Next.js
+import dynamic from "next/dynamic"; 
 
-// 🚀 2. Bungkus seluruh logika dashboard utama kamu ke dalam fungsi komponen terpisah
 function AdminDashboardContent() {
     const { products, addProduct, deleteProduct, updateProduct, fetchProducts } = useProductStore();
     const { data: session, status } = useSession();
