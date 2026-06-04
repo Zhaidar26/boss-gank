@@ -243,6 +243,11 @@ function AdminDashboardContent() {
                                     <div>
                                         <h3 className="font-bold text-sm text-black">{product.name}</h3>
                                         <p className="text-xs text-amber-600 font-medium">Rp {product.price.toLocaleString()}</p>
+                                        {product.isRecommended && (
+                                            <span className="w-fit bg-amber-50 text-amber-700 text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1 animate-pulse">
+                                                Paling Disukai Hari Ini 🔥
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
