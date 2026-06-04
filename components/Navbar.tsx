@@ -15,9 +15,12 @@ export default function Navbar() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const currentUserId = (session?.user as any)?.id || "guest";
+    const userSpesificCart = cart.filter((item) => item.userId === currentUserId);
+
+    const total = userSpesificCart.reduce((sum, item) => sum + item.quantity, 0);
     setTotalItems(total);
-  }, [cart]);
+  }, [cart, session]);
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 text-black">

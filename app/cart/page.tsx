@@ -3,29 +3,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/store/useCart";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useOrderStore, Order } from "@/store/useOrderStore";
 
 export default function CartPage() {
-    const { cart, removeFromCart, clearCart, addToCart } = useCart();
+    const { data: session } = useSession();
+    const globalCart = useCart((state) => state.cart);
+    const minusQuantity = useCart((state) => state.minusQuantity);
+    const addToCart = useCart((state) => state.addToCart);
+    const clearCart = useCart((state) => state.clearCart);
+
     const [mounted, setMounted] = useState(false);
     const [loading, setLoading] = useState(false);
     const addOrder = useOrderStore((state) => state.addOrder);
 
-    // State Data Pengiriman & Metode Pembayaran
+    const currentUserId = (session?.user as any)?.id || "guest";
+
+    const myCartItems = globalCart.filter((item) => item.userId === currentUserId);
+
     const [shippingData, setShippingData] = useState({
         name: "",
         phone: "",
         address: "",
         notes: "",
     });
-    const [paymentMethod, setPaymentMethod] = useState("midtrans"); // default ke Midtrans
+    const [paymentMethod, setPaymentMethod] = useState("midtrans");
 
-    // Load Skrip Midtrans Snap secara otomatis di latar belakang
     useEffect(() => {
         setMounted(true);
         const snapSrcUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
-        const myMidtransClientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ""; // Ganti dengan Client Key Sandbox Anda nanti
+        const myMidtransClientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
 
         const script = document.createElement("script");
         script.src = snapSrcUrl;
@@ -34,7 +42,9 @@ export default function CartPage() {
         document.body.appendChild(script);
 
         return () => {
-            document.body.removeChild(script);
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
         };
     }, []);
 
@@ -46,18 +56,10 @@ export default function CartPage() {
         );
     }
 
-    const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const totalPrice = myCartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
     const handleDecreaseQuantity = (item: any) => {
-        if (item.quantity > 1) {
-            useCart.setState({
-                cart: cart.map((cartItem) =>
-                    cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem
-                ),
-            });
-        } else {
-            removeFromCart(item.id);
-        }
+        minusQuantity(currentUserId, item.id);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -65,7 +67,6 @@ export default function CartPage() {
         setShippingData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // HANDLER UTAMA CHECKOUT
     const handleCheckoutSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -74,7 +75,7 @@ export default function CartPage() {
             return;
         }
 
-        const randomOrderId = `MATCHA-${Date.now()}`;
+        const randomOrderId = `BOSS-${Date.now()}`;
 
         const newOrderData: Order = {
             id: randomOrderId,
@@ -84,21 +85,21 @@ export default function CartPage() {
                 notes: shippingData.notes,
                 phone: Number(shippingData.phone) || 0,
             },
-            items: cart.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
+            items: myCartItems.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity })),
             total: totalPrice,
             paymentMethod: paymentMethod as "midtrans" | "whatsapp",
-            status: paymentMethod === "whatsapp" ? "success" : "pending", // WA langsung sukses/manual, Midtrans nunggu bayar
+            status: paymentMethod === "whatsapp" ? "success" : "pending",
             date: new Date().toLocaleDateString("id-ID", { hour: "2-digit", minute: "2-digit" }),
         };
 
-        // ─── OPSYEN 1: PROSES VIA WHATSAPP ───
+        // ─── OPSI 1: PROSES VIA WHATSAPP ───
         if (paymentMethod === "whatsapp") {
             addOrder(newOrderData);
 
-            const nomorWA = "6281331996233"; // Ganti dengan nomor WhatsApp Toko Anda (Gunakan format 62)
+            const nomorWA = "6281331996233";
 
             let teksDaftarBelanja = "";
-            cart.forEach((item, index) => {
+            myCartItems.forEach((item, index) => {
                 teksDaftarBelanja += `${index + 1}. ${item.name} (${item.quantity}x) - Rp ${(item.price * item.quantity).toLocaleString()}\n`;
             });
 
@@ -106,16 +107,15 @@ export default function CartPage() {
 
             const linkWA = `https://wa.me/${nomorWA}?text=${encodeURIComponent(pesanWhatsApp)}`;
 
-            clearCart(); // Kosongkan keranjang setelah dilempar ke WA
+            clearCart(currentUserId);
             window.open(linkWA, "_blank");
             window.location.href = "/orders";
             return;
         }
 
-        // ─── OPSYEN 2: PROSES VIA MIDTRANS ───
+        // ─── OPSI 2: PROSES VIA MIDTRANS ───
         if (paymentMethod === "midtrans") {
             setLoading(true);
-            const randomOrderId = `MATCHA-${Date.now()}`;
 
             try {
                 const res = await fetch("/api/checkout", {
@@ -125,7 +125,7 @@ export default function CartPage() {
                         orderId: randomOrderId,
                         total: totalPrice,
                         customer: shippingData,
-                        items: cart,
+                        items: myCartItems,
                     }),
                 });
 
@@ -134,17 +134,18 @@ export default function CartPage() {
                 if (data.token) {
                     setLoading(false);
                     addOrder(newOrderData);
+                    
                     // Panggil popup snap Midtrans
                     (window as any).snap.pay(data.token, {
                         onSuccess: function (result: any) {
                             useOrderStore.getState().updateOrderStatus(randomOrderId, "success");
                             alert("Pembayaran Berhasil! Terima kasih.");
-                            clearCart();
+                            clearCart(currentUserId); // ✅ FIX: Kirim currentUserId
                             window.location.href = "/orders";
                         },
                         onPending: function (result: any) {
                             alert("Menunggu pembayaran Anda.");
-                            clearCart();
+                            clearCart(currentUserId); // ✅ FIX: Kirim currentUserId
                             window.location.href = "/";
                         },
                         onError: function (result: any) {
@@ -167,7 +168,8 @@ export default function CartPage() {
         }
     };
 
-    if (cart.length === 0) {
+    // ✅ FIX: Cek kekosongan menggunakan myCartItems
+    if (myCartItems.length === 0) {
         return (
             <main className="min-h-screen bg-white p-10 flex flex-col items-center justify-center text-black">
                 <h1 className="text-2xl font-semibold mb-2 tracking-wide">Keranjang Anda Kosong</h1>
@@ -187,7 +189,8 @@ export default function CartPage() {
                     <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                         <h2 className="text-sm font-bold mb-6 tracking-wider text-gray-400 uppercase">1. Review Barang</h2>
                         <div className="space-y-6">
-                            {cart.map((item) => (
+                            {/* ✅ FIX: Looping menggunakan myCartItems */}
+                            {myCartItems.map((item) => (
                                 <div key={item.id} className="flex items-center justify-between border-b border-gray-50 pb-6 last:border-0 last:pb-0">
                                     <div className="flex items-center gap-4">
                                         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
@@ -200,9 +203,10 @@ export default function CartPage() {
                                     </div>
                                     <div className="flex items-center gap-4 md:gap-8">
                                         <div className="flex items-center border border-gray-200 rounded-xl px-2 py-0.5 gap-2.5">
-                                            <button type="button" onClick={() => handleDecreaseQuantity(item)} className="text-gray-400 font-bold text-sm">-</button>
+                                            <button type="button" onClick={() => handleDecreaseQuantity(item)} className="text-gray-400 font-bold text-sm cursor-pointer">-</button>
                                             <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
-                                            <button type="button" onClick={() => addToCart(item)} className="text-gray-400 font-bold text-sm">+</button>
+                                            {/* ✅ FIX: Panggil addToCart dengan format (userId, produk) */}
+                                            <button type="button" onClick={() => addToCart(currentUserId, item)} className="text-gray-400 font-bold text-sm cursor-pointer">+</button>
                                         </div>
                                         <span className="font-semibold text-sm min-w-[70px] text-right">Rp {(item.price * item.quantity).toLocaleString()}</span>
                                     </div>
@@ -238,7 +242,6 @@ export default function CartPage() {
                     <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                         <h2 className="text-sm font-bold mb-4 tracking-wider text-gray-400 uppercase">3. Metode Pembayaran</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Pilihan Midtrans */}
                             <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${paymentMethod === "midtrans" ? "border-black bg-gray-50" : "border-gray-200"}`}>
                                 <div className="flex items-center gap-3">
                                     <input type="radio" name="payment" value="midtrans" checked={paymentMethod === "midtrans"} onChange={() => setPaymentMethod("midtrans")} className="accent-black" />
@@ -249,7 +252,6 @@ export default function CartPage() {
                                 </div>
                             </label>
 
-                            {/* Pilihan WhatsApp */}
                             <label className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition ${paymentMethod === "whatsapp" ? "border-black bg-gray-50" : "border-gray-200"}`}>
                                 <div className="flex items-center gap-3">
                                     <input type="radio" name="payment" value="whatsapp" checked={paymentMethod === "whatsapp"} onChange={() => setPaymentMethod("whatsapp")} className="accent-black" />

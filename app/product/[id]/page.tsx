@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "../../lib/prisma";
+import { useSession } from "next-auth/react";
 import AddToCartButton from "@/components/AddToCartButton";
 import { notFound } from "next/navigation";
 
