@@ -243,7 +243,7 @@ export default function CartPage() {
                                 <div className="flex items-center gap-3">
                                     <input type="radio" name="payment" value="midtrans" checked={paymentMethod === "midtrans"} onChange={() => setPaymentMethod("midtrans")} className="accent-black" />
                                     <div>
-                                        <p className="text-sm font-bold">Transfer Otomatis (Midtrans)</p>
+                                        <p className="text-sm font-bold">Transfer E-Wallet</p>
                                         <p className="text-xs text-gray-400">Virtual Account, QRIS, Gopay</p>
                                     </div>
                                 </div>
