@@ -36,6 +36,7 @@ export default function Navbar() {
 
         {status === "authenticated" && (session?.user as any).role === "ADMIN" && (
           <Link href="/admin" className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100 uppercase tracking-wider hover:bg-amber-100 transition">
+            Masuk Ke Dashboard
           </Link>
         )}
         {status === "loading" ? (
